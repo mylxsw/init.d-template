@@ -11,7 +11,7 @@
 BIN=/usr/local/consul/bin/consul
 CONF=/usr/local/consul/etc
 RUNAS=root
-SCRIPT=$BIN agent
+SCRIPT="$BIN agent"
 
 PIDFILE=/var/run/consul.pid
 LOGFILE=/var/log/consul.log
@@ -22,7 +22,7 @@ start_server() {
     return 1
   fi
   echo 'Starting service...' >&2
-  local CMD="$SCRIPT --confi-dir $CONF/server &> \"$LOGFILE\" & echo \$!"
+  local CMD="$SCRIPT --config-dir $CONF/server &> \"$LOGFILE\" & echo \$!"
   su -c "$CMD" $RUNAS > "$PIDFILE"
   echo 'Service started' >&2
 }
@@ -33,12 +33,10 @@ start_bootstrap() {
     return 1
   fi
   echo 'Starting service...' >&2
-  local CMD="$SCRIPT --confi-dir $CONF/bootstrap &> \"$LOGFILE\" & echo \$!"
+  local CMD="$SCRIPT --config-dir $CONF/bootstrap &> \"$LOGFILE\" & echo \$!"
   su -c "$CMD" $RUNAS > "$PIDFILE"
   echo 'Service started' >&2
 }
-
-
 
 stop() {
   if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
@@ -72,20 +70,20 @@ force_quit() {
 }
 
 case "$1" in
-  start_server)
+  start-server)
     start_server
     ;;
-  start_bootstrap)
+  start-bootstrap)
     start_bootstrap
     ;;
   stop)
     stop
     ;;
-  restart_server)
+  restart-server)
     stop
     start_server
     ;;
-  restart_bootstrap)
+  restart-bootstrap)
     stop
     start_bootstrap
     ;;
@@ -96,5 +94,5 @@ case "$1" in
     status
     ;;
   *)
-    echo "Usage: $0 {start_bootstrap|start_server|stop|restart_server|restart_bootstrap|status|force-quit}"
+    echo "Usage: $0 {start-bootstrap|start-server|stop|restart-server|restart-bootstrap|status|force-quit}"
 esac
