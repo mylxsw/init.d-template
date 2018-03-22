@@ -1,0 +1,100 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          consul
+# Required-Start:    $local_fs $network $named $time $syslog
+# Required-Stop:     $local_fs $network $named $time $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Description:       Service Discovery and Configuration Made Easy
+### END INIT INFO
+
+BIN=/usr/local/consul/bin/consul
+CONF=/usr/local/consul/etc
+RUNAS=root
+SCRIPT=$BIN agent
+
+PIDFILE=/var/run/consul.pid
+LOGFILE=/var/log/consul.log
+
+start_server() {
+  if [ -f "$PIDFILE" ] && kill -0 $(cat $PIDFILE); then
+    echo 'Service already running' >&2
+    return 1
+  fi
+  echo 'Starting service...' >&2
+  local CMD="$SCRIPT --confi-dir $CONF/server &> \"$LOGFILE\" & echo \$!"
+  su -c "$CMD" $RUNAS > "$PIDFILE"
+  echo 'Service started' >&2
+}
+
+start_bootstrap() {
+  if [ -f "$PIDFILE" ] && kill -0 $(cat $PIDFILE); then
+    echo 'Service already running' >&2
+    return 1
+  fi
+  echo 'Starting service...' >&2
+  local CMD="$SCRIPT --confi-dir $CONF/bootstrap &> \"$LOGFILE\" & echo \$!"
+  su -c "$CMD" $RUNAS > "$PIDFILE"
+  echo 'Service started' >&2
+}
+
+
+
+stop() {
+  if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+    echo 'Service not running' >&2
+    return 1
+  fi
+  echo 'Stopping service...' >&2
+  kill -15 $(cat "$PIDFILE") && rm -f "$PIDFILE"
+  echo 'Service stopped' >&2
+}
+
+status() {
+  if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+    echo 'Service stopped' >&2
+  else
+    PID=`cat $PIDFILE`
+    echo "Service (pid=$PID) is running" >&2
+  fi
+
+  return 1
+}
+
+force_quit() {
+  if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+    echo 'Service not running' >&2
+    return 1
+  fi
+  echo 'Stopping service...' >&2
+  kill -TERM $(cat "$PIDFILE") && rm -f "$PIDFILE"
+  echo 'Service stopped' >&2
+}
+
+case "$1" in
+  start_server)
+    start_server
+    ;;
+  start_bootstrap)
+    start_bootstrap
+    ;;
+  stop)
+    stop
+    ;;
+  restart_server)
+    stop
+    start_server
+    ;;
+  restart_bootstrap)
+    stop
+    start_bootstrap
+    ;;
+  force-quit)
+    force_quit
+    ;;
+  status)
+    status
+    ;;
+  *)
+    echo "Usage: $0 {start_bootstrap|start_server|stop|restart_server|restart_bootstrap|status|force-quit}"
+esac
