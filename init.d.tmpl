@@ -20,6 +20,8 @@ start() {
   fi
   echo 'Starting service...' >&2
   local CMD="$SCRIPT &> \"$LOGFILE\" & echo \$!"
+  # if the user to run command have not a shell，you can use `-s` option to spectify a shell 
+  # su $RUNAS -s /bin/bash -c "$CMD" > "$PIDFILE"
   su -c "$CMD" $RUNAS > "$PIDFILE"
   echo 'Service started' >&2
 }
